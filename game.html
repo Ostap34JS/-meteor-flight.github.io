@@ -1,0 +1,247 @@
+<meta charset="utf-8">
+<style>/*
+    #ctx{
+    display: block;
+    background: #fff;
+    margin: 30px auto;
+    }*/
+    *{
+        margin: 0;
+        padding: 0;
+    }
+    body{
+        background: url(Space2.jpg);
+    }
+    #ctx{
+        background:url(Space.jpg);
+        margin: 0 auto;
+        position: absolute;
+    }
+    .alert_box{
+        text-align: center;
+        background:url(Space.jpg);
+        color: red;
+        font-size: 40px;
+        font-family: cursive;
+    }
+</style>
+    <canvas id="ctx"></canvas>
+<script>
+document.getElementById('ctx').width = document.body.clientWidth;//Ширина canvas
+document.getElementById('ctx').height = document.body.clientHeight;//Висота canvas
+var ctx = document.getElementById("ctx").getContext("2d");
+ctx.font = '30px Arial italic';
+
+var HEIGHT = document.getElementById('ctx').height;
+var WIDTH = document.getElementById('ctx').width;
+var timeWhenGameStarted = Date.now();   //return time in ms
+ 
+var playerSkin = new Image();
+playerSkin.src = 'player.png';
+var enemySkin = new Image();
+enemySkin.src = 'enemy.png';
+ 
+var frameCount = 0;  
+var score = 0;
+    
+var player = {
+        x:50,
+        spdX:30,
+        y:40,
+        spdY:5,
+        name:'P',
+        hp:10, 
+};
+ 
+var enemyList = {};
+var upgradeList = {};
+ 
+ 
+getDistanceBetweenEntity = function (entity1,entity2){//повернення відстані (число)
+        var vx = entity1.x - entity2.x;
+        var vy = entity1.y - entity2.y;
+        return Math.sqrt(vx*vx+vy*vy);
+}
+ 
+testCollisionEntity = function (entity1,entity2){   //повернутися, якщо зустрівся з стіною (істина / неправда)
+        var distance = getDistanceBetweenEntity(entity1,entity2);
+        return distance < 30;
+}
+ 
+Enemy = function (id,x,y,spdX,spdY){
+        var enemy3 = {
+                x:x,
+                spdX:spdX,
+                y:y,
+                spdY:spdY,
+                name:'E',
+                id:id,
+        };
+        enemyList[id] = enemy3;
+       
+}
+ 
+ 
+Upgrade = function (id,x,y,spdX,spdY,width,height){
+        var upgarde = {
+                x:x,
+                spdX:spdX,
+                y:y,
+                spdY:spdY,
+                name:'E',
+                id:id,
+                width:width,
+                height:height,
+        };
+        upgradeList[id] = upgarde;
+}
+randomlyGenerateUpgrade = function(){
+        //Math.random() returns a number between 0 and 1
+        var x = Math.random()*WIDTH;
+        var y = Math.random()*HEIGHT;
+        var height = 10;
+        var width = 10;
+        var id = Math.random();
+        var spdX = 0;
+        var spdY = 0;
+        Upgrade(id,x,y,spdX,spdY,width,height); 
+        console.log('new upgrade!');
+}
+ 
+ 
+
+document.onmousemove = function(mouse){
+        var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
+        var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
+       
+        if(mouseX < player.width/2)
+            mouseX = player.width/2;
+        if(mouseX > WIDTH-player.width/2)
+            mouseX = WIDTH - player.width/2;
+        if(mouseY < player.height/2)
+            mouseY = player.height/2;
+        if(mouseY > HEIGHT - player.height/2)
+            mouseY = HEIGHT - player.height/2;
+       
+    
+    
+        player.x = mouseX;
+        player.y = mouseY;
+}
+ 
+ 
+ 
+ 
+ 
+updateEntity = function (something){
+        updateEntityPosition(something);
+        drawEntity(something);
+}
+updateEntityPosition = function(something){
+        something.x += something.spdX;
+        something.y += something.spdY;
+                       
+        if(something.x < 0 || something.x > WIDTH){
+                something.spdX = -something.spdX;
+        }
+        if(something.y < 0 || something.y > HEIGHT){
+                something.spdY = -something.spdY;
+        }
+}
+ 
+ 
+drawPlayer = function(something){
+        ctx.drawImage(playerSkin,something.x-10,something.y-10,76,84);
+}
+drawEntity = function(something){
+       ctx.drawImage(enemySkin,something.x-15,something.y-15,58,38);
+}
+ 
+ 
+ 
+update = function(){
+        ctx.clearRect(0,0,WIDTH,HEIGHT);
+       
+        frameCount++;
+        score++;
+    
+        if(frameCount % 100 === 0)
+            randomlyGenerateEnemy();/*
+        if(frameCount % 75 === 0)
+            randomlyGenerateUpgrade();
+    
+        for(var key in upgradeList){
+                upgradeList(upgradeList [key]);*/
+            
+        for(var key in enemyList){
+                updateEntity(enemyList[key]);
+               
+            
+        addHp();
+                var isColliding = testCollisionEntity(player,enemyList[key]);
+                if(isColliding){
+                    player.hp = player.hp - 1;
+                }
+                if(player.hp <= 0){
+                var timeSurvived = Date.now() - timeWhenGameStarted;
+                alert("Ви програли! ваш рахунок " +  score);
+                
+                startNewGame();
+                }
+               
+        }
+       
+        drawPlayer(player); 
+        ctx.fillStyle = '#ba00ff';
+        ctx.fillText(player.hp + " Hp",0,30);
+        ctx.fillStyle = "#008fe8";
+        ctx.fillText("Score " + score,100,30);
+}
+startNewGame = function(){
+    player.hp = 10;
+    timeWhenGameStarted = Date.now();
+    frameCount = 0;
+    score = 0;
+    enemyList = {};
+    randomlyGenerateEnemy();
+    randomlyGenerateEnemy();
+    randomlyGenerateEnemy();
+    randomlyGenerateEnemy();
+}
+
+randomlyGenerateEnemy = function(){
+        //Math.random() returns a number between 0 and 1
+        var x = Math.random()*WIDTH;
+        var y = Math.random()*HEIGHT;
+        var height = 10 + Math.random()*30; 
+        var width = 10 + Math.random()*30;
+        var id = Math.random();
+        var spdX = 5 + Math.random() * 5;
+        var spdY = 5 + Math.random() * 5;
+        Enemy(id,x,y,spdX,spdY,width,height);
+        console.log('New Enemy!');      
+}
+ 
+addHp = function(){
+    if(score === 1000 || score === 2000){
+        player.hp = 30;
+    }
+}
+
+setInterval(update,40);
+ 
+randomlyGenerateEnemy();
+randomlyGenerateEnemy();
+randomlyGenerateEnemy();
+randomlyGenerateEnemy();
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+</script>
