@@ -1,1 +1,1 @@
-# -meteor-flight.github.io
+Small game in html5 canvas)
